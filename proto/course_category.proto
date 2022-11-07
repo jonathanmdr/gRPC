@@ -8,11 +8,18 @@ message Category {
     string description = 3;
 }
 
+message EmptyRequest {}
+
 message CreateCategoryRequest {
     string name = 1;
     string description = 2;
 }
 
+message CategoriesResponse {
+    repeated Category categories = 1;
+}
+
 service CategoryService {
     rpc CreateCategory(CreateCategoryRequest) returns (Category) {}
+    rpc GetCategories(EmptyRequest) returns (CategoriesResponse) {}
 }
