@@ -8,9 +8,19 @@ message GetCategoryRequest {
     string id = 1;
 }
 
+message GetCourseRequest {
+    string id = 1;
+}
+
 message CreateCategoryRequest {
     string name = 1;
     string description = 2;
+}
+
+message CreateCourseRequest {
+    string name = 1;
+    string description = 2;
+    string category_id = 3;
 }
 
 message CategoryResponse {
@@ -19,8 +29,19 @@ message CategoryResponse {
     string description = 3;
 }
 
+message CourseResponse {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    CategoryResponse category = 4;
+}
+
 message CategoriesResponse {
     repeated CategoryResponse categories = 1;
+}
+
+message CoursesResponse {
+    repeated CourseResponse courses = 1;
 }
 
 service CategoryService {
@@ -29,4 +50,9 @@ service CategoryService {
     rpc CreateCategory(CreateCategoryRequest) returns (CategoryResponse) {}
     rpc CreateCategoryStream(stream CreateCategoryRequest) returns (CategoriesResponse) {}
     rpc CreateCategoryStreamBidirectional(stream CreateCategoryRequest) returns (stream CategoryResponse) {}
+}
+
+service CourseService {
+    rpc GetCourse(GetCourseRequest) returns (CourseResponse) {}
+    rpc CreateCourse(CreateCourseRequest) returns (CourseResponse) {}
 }

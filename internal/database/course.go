@@ -33,6 +33,20 @@ func (c *Course) Create(name, description, categoryID string) (*Course, error) {
 	}, nil
 }
 
+func (c *Course) FindById(courseId string) (Course, error) {
+	var id, name, description, categoryId string
+	err := c.db.QueryRow("SELECT id, name, description, category_id FROM courses WHERE id = $1", courseId).Scan(&id, &name, &description, &categoryId)
+	if err != nil {
+		return Course{}, err
+	}
+	return Course{
+		ID:          id,
+		Name:        name,
+		Description: description,
+		CategoryID:  categoryId,
+	}, nil
+}
+
 func (c *Course) FindAll() ([]Course, error) {
 	rows, err := c.db.Query("SELECT id, name, description, category_id FROM courses")
 	if err != nil {

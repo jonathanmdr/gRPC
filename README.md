@@ -28,11 +28,20 @@ brew install evans
 sqlite3 db.sqlite
 ```
 ```sql
--- For create table
+-- For create table categories
 create table categories(
-    id string,
+    id string primary key,
     name string,
     description string
+);
+
+-- For create table courses
+create table courses(
+    id string primary key,
+    name string,
+    description string,
+    category_id string,
+    foreign key (category_id) references categories(id)
 );
 ```
 
