@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"io"
 
 	"github.com/jonathanmdr/gRPC/internal/database"
 	"github.com/jonathanmdr/gRPC/internal/pb"
@@ -88,4 +89,41 @@ func (c *CourseService) CreateCourse(ctx context.Context, in *pb.CreateCourseReq
 			Description: category.Description,
 		},
 	}, nil
+}
+
+func (c *CourseService) CreateCourseStream(stream pb.CourseService_CreateCourseStreamServer) error {
+	courses := &pb.CoursesResponse{}
+
+	for {
+		courseRequest, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(courses)
+		}
+		if err != nil {
+			return err
+		}
+		category, err := c.CategoryDB.FindById(courseRequest.CategoryId)
+		if err != nil {
+			return err
+		}
+		course, err := c.CourseDB.Create(
+			courseRequest.Name,
+			courseRequest.Description,
+			courseRequest.CategoryId,
+		)
+		if err != nil {
+			return err
+		}
+		var courseResponse = &pb.CourseResponse{
+			Id:          course.ID,
+			Name:        course.Name,
+			Description: course.Description,
+			Category: &pb.CategoryResponse{
+				Id:          category.ID,
+				Name:        category.Name,
+				Description: category.Description,
+			},
+		}
+		courses.Courses = append(courses.Courses, courseResponse)
+	}
 }
