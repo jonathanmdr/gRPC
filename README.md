@@ -52,6 +52,7 @@ evans -r repl
 ## Select gRPC service on client:
 ---
 > Needs to start client before selecting gRPC service
+>
 > `first param` is the gRPC service name
 ```sh
 # If your function uses stream mode, for stop this use 'Ctrl + D'
@@ -61,6 +62,7 @@ service CategoryService
 ## Calling gRPC service function on client:
 ---
 > Needs to start client before selecting gRPC service
+>
 > `first param` is the function name
 ```sh
 call CreateCategory
