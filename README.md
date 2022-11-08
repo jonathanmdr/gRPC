@@ -54,6 +54,7 @@ evans -r repl
 > Needs to start client before selecting gRPC service
 > `first param` is the gRPC service name
 ```sh
+# If your function uses stream mode, for stop this use 'Ctrl + D'
 service CategoryService
 ```
 
