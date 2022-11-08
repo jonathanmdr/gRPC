@@ -57,4 +57,5 @@ service CourseService {
     rpc GetCourses(EmptyRequest) returns (CoursesResponse) {}
     rpc CreateCourse(CreateCourseRequest) returns (CourseResponse) {}
     rpc CreateCourseStream(stream CreateCourseRequest) returns (CoursesResponse) {}
+    rpc CreateCourseStreamBidirectional(stream CreateCourseRequest) returns (stream CourseResponse) {}
 }

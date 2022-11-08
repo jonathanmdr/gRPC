@@ -323,6 +323,7 @@ type CourseServiceClient interface {
 	GetCourses(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*CoursesResponse, error)
 	CreateCourse(ctx context.Context, in *CreateCourseRequest, opts ...grpc.CallOption) (*CourseResponse, error)
 	CreateCourseStream(ctx context.Context, opts ...grpc.CallOption) (CourseService_CreateCourseStreamClient, error)
+	CreateCourseStreamBidirectional(ctx context.Context, opts ...grpc.CallOption) (CourseService_CreateCourseStreamBidirectionalClient, error)
 }
 
 type courseServiceClient struct {
@@ -394,6 +395,37 @@ func (x *courseServiceCreateCourseStreamClient) CloseAndRecv() (*CoursesResponse
 	return m, nil
 }
 
+func (c *courseServiceClient) CreateCourseStreamBidirectional(ctx context.Context, opts ...grpc.CallOption) (CourseService_CreateCourseStreamBidirectionalClient, error) {
+	stream, err := c.cc.NewStream(ctx, &CourseService_ServiceDesc.Streams[1], "/pb.CourseService/CreateCourseStreamBidirectional", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &courseServiceCreateCourseStreamBidirectionalClient{stream}
+	return x, nil
+}
+
+type CourseService_CreateCourseStreamBidirectionalClient interface {
+	Send(*CreateCourseRequest) error
+	Recv() (*CourseResponse, error)
+	grpc.ClientStream
+}
+
+type courseServiceCreateCourseStreamBidirectionalClient struct {
+	grpc.ClientStream
+}
+
+func (x *courseServiceCreateCourseStreamBidirectionalClient) Send(m *CreateCourseRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *courseServiceCreateCourseStreamBidirectionalClient) Recv() (*CourseResponse, error) {
+	m := new(CourseResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CourseServiceServer is the server API for CourseService service.
 // All implementations must embed UnimplementedCourseServiceServer
 // for forward compatibility
@@ -402,6 +434,7 @@ type CourseServiceServer interface {
 	GetCourses(context.Context, *EmptyRequest) (*CoursesResponse, error)
 	CreateCourse(context.Context, *CreateCourseRequest) (*CourseResponse, error)
 	CreateCourseStream(CourseService_CreateCourseStreamServer) error
+	CreateCourseStreamBidirectional(CourseService_CreateCourseStreamBidirectionalServer) error
 	mustEmbedUnimplementedCourseServiceServer()
 }
 
@@ -420,6 +453,9 @@ func (UnimplementedCourseServiceServer) CreateCourse(context.Context, *CreateCou
 }
 func (UnimplementedCourseServiceServer) CreateCourseStream(CourseService_CreateCourseStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method CreateCourseStream not implemented")
+}
+func (UnimplementedCourseServiceServer) CreateCourseStreamBidirectional(CourseService_CreateCourseStreamBidirectionalServer) error {
+	return status.Errorf(codes.Unimplemented, "method CreateCourseStreamBidirectional not implemented")
 }
 func (UnimplementedCourseServiceServer) mustEmbedUnimplementedCourseServiceServer() {}
 
@@ -514,6 +550,32 @@ func (x *courseServiceCreateCourseStreamServer) Recv() (*CreateCourseRequest, er
 	return m, nil
 }
 
+func _CourseService_CreateCourseStreamBidirectional_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(CourseServiceServer).CreateCourseStreamBidirectional(&courseServiceCreateCourseStreamBidirectionalServer{stream})
+}
+
+type CourseService_CreateCourseStreamBidirectionalServer interface {
+	Send(*CourseResponse) error
+	Recv() (*CreateCourseRequest, error)
+	grpc.ServerStream
+}
+
+type courseServiceCreateCourseStreamBidirectionalServer struct {
+	grpc.ServerStream
+}
+
+func (x *courseServiceCreateCourseStreamBidirectionalServer) Send(m *CourseResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *courseServiceCreateCourseStreamBidirectionalServer) Recv() (*CreateCourseRequest, error) {
+	m := new(CreateCourseRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CourseService_ServiceDesc is the grpc.ServiceDesc for CourseService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -538,6 +600,12 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "CreateCourseStream",
 			Handler:       _CourseService_CreateCourseStream_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "CreateCourseStreamBidirectional",
+			Handler:       _CourseService_CreateCourseStreamBidirectional_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},

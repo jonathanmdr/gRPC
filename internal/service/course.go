@@ -127,3 +127,41 @@ func (c *CourseService) CreateCourseStream(stream pb.CourseService_CreateCourseS
 		courses.Courses = append(courses.Courses, courseResponse)
 	}
 }
+
+func (c *CourseService) CreateCourseStreamBidirectional(stream pb.CourseService_CreateCourseStreamBidirectionalServer) error {
+	for {
+		courseRequest, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		category, err := c.CategoryDB.FindById(courseRequest.CategoryId)
+		if err != nil {
+			return err
+		}
+		course, err := c.CourseDB.Create(
+			courseRequest.Name,
+			courseRequest.Description,
+			courseRequest.CategoryId,
+		)
+		if err != nil {
+			return err
+		}
+		var courseResponse = &pb.CourseResponse{
+			Id:          course.ID,
+			Name:        course.Name,
+			Description: course.Description,
+			Category: &pb.CategoryResponse{
+				Id:          category.ID,
+				Name:        category.Name,
+				Description: category.Description,
+			},
+		}
+		err = stream.Send(courseResponse)
+		if err != nil {
+			return err
+		}
+	}
+}
