@@ -54,5 +54,6 @@ service CategoryService {
 
 service CourseService {
     rpc GetCourse(GetCourseRequest) returns (CourseResponse) {}
+    rpc GetCourses(EmptyRequest) returns (CoursesResponse) {}
     rpc CreateCourse(CreateCourseRequest) returns (CourseResponse) {}
 }

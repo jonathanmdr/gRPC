@@ -41,6 +41,34 @@ func (c *CourseService) GetCourse(ctx context.Context, in *pb.GetCourseRequest) 
 	}, nil
 }
 
+func (c *CourseService) GetCourses(context.Context, *pb.EmptyRequest) (*pb.CoursesResponse, error) {
+	courses, err := c.CourseDB.FindAll()
+	if err != nil {
+		return nil, err
+	}
+	var coursesResponse []*pb.CourseResponse
+	for _, course := range courses {
+		category, err := c.CategoryDB.FindById(course.CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		var courseResponse = &pb.CourseResponse{
+			Id:          course.ID,
+			Name:        course.Name,
+			Description: course.Description,
+			Category: &pb.CategoryResponse{
+				Id:          category.ID,
+				Name:        category.Name,
+				Description: category.Description,
+			},
+		}
+		coursesResponse = append(coursesResponse, courseResponse)
+	}
+	return &pb.CoursesResponse{
+		Courses: coursesResponse,
+	}, nil
+}
+
 func (c *CourseService) CreateCourse(ctx context.Context, in *pb.CreateCourseRequest) (*pb.CourseResponse, error) {
 	category, err := c.CategoryDB.FindById(in.CategoryId)
 	if err != nil {
