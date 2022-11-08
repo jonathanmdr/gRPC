@@ -25,6 +25,7 @@ type CategoryServiceClient interface {
 	GetCategory(ctx context.Context, in *GetCategoryRequest, opts ...grpc.CallOption) (*CategoryResponse, error)
 	GetCategories(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*CategoriesResponse, error)
 	CreateCategory(ctx context.Context, in *CreateCategoryRequest, opts ...grpc.CallOption) (*CategoryResponse, error)
+	CreateCategoryStream(ctx context.Context, opts ...grpc.CallOption) (CategoryService_CreateCategoryStreamClient, error)
 }
 
 type categoryServiceClient struct {
@@ -62,6 +63,40 @@ func (c *categoryServiceClient) CreateCategory(ctx context.Context, in *CreateCa
 	return out, nil
 }
 
+func (c *categoryServiceClient) CreateCategoryStream(ctx context.Context, opts ...grpc.CallOption) (CategoryService_CreateCategoryStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &CategoryService_ServiceDesc.Streams[0], "/pb.CategoryService/CreateCategoryStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &categoryServiceCreateCategoryStreamClient{stream}
+	return x, nil
+}
+
+type CategoryService_CreateCategoryStreamClient interface {
+	Send(*CreateCategoryRequest) error
+	CloseAndRecv() (*CategoriesResponse, error)
+	grpc.ClientStream
+}
+
+type categoryServiceCreateCategoryStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *categoryServiceCreateCategoryStreamClient) Send(m *CreateCategoryRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *categoryServiceCreateCategoryStreamClient) CloseAndRecv() (*CategoriesResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(CategoriesResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CategoryServiceServer is the server API for CategoryService service.
 // All implementations must embed UnimplementedCategoryServiceServer
 // for forward compatibility
@@ -69,6 +104,7 @@ type CategoryServiceServer interface {
 	GetCategory(context.Context, *GetCategoryRequest) (*CategoryResponse, error)
 	GetCategories(context.Context, *EmptyRequest) (*CategoriesResponse, error)
 	CreateCategory(context.Context, *CreateCategoryRequest) (*CategoryResponse, error)
+	CreateCategoryStream(CategoryService_CreateCategoryStreamServer) error
 	mustEmbedUnimplementedCategoryServiceServer()
 }
 
@@ -84,6 +120,9 @@ func (UnimplementedCategoryServiceServer) GetCategories(context.Context, *EmptyR
 }
 func (UnimplementedCategoryServiceServer) CreateCategory(context.Context, *CreateCategoryRequest) (*CategoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCategory not implemented")
+}
+func (UnimplementedCategoryServiceServer) CreateCategoryStream(CategoryService_CreateCategoryStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method CreateCategoryStream not implemented")
 }
 func (UnimplementedCategoryServiceServer) mustEmbedUnimplementedCategoryServiceServer() {}
 
@@ -152,6 +191,32 @@ func _CategoryService_CreateCategory_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CategoryService_CreateCategoryStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(CategoryServiceServer).CreateCategoryStream(&categoryServiceCreateCategoryStreamServer{stream})
+}
+
+type CategoryService_CreateCategoryStreamServer interface {
+	SendAndClose(*CategoriesResponse) error
+	Recv() (*CreateCategoryRequest, error)
+	grpc.ServerStream
+}
+
+type categoryServiceCreateCategoryStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *categoryServiceCreateCategoryStreamServer) SendAndClose(m *CategoriesResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *categoryServiceCreateCategoryStreamServer) Recv() (*CreateCategoryRequest, error) {
+	m := new(CreateCategoryRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CategoryService_ServiceDesc is the grpc.ServiceDesc for CategoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -172,6 +237,12 @@ var CategoryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CategoryService_CreateCategory_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "CreateCategoryStream",
+			Handler:       _CategoryService_CreateCategoryStream_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "proto/course_category.proto",
 }
